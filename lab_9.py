@@ -40,3 +40,26 @@ fragmentos_medicos = [
     "Monoartrite aguda em primeira metatarsofalângica, com cristais de urato monossódico na artrocentese, confirma diagnóstico de gota gotosa.",
     "Fratura por estresse em atletas de alto impacto manifesta-se como dor localizada progressiva com edema focal, confirmada por cintilografia óssea.",
 ]
+
+print(f"Base carregada: {len(fragmentos_medicos)} fragmentos\n")
+
+modelo_embedding = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2")
+
+t0 = time.time()
+vetores_base = modelo_embedding.encode(
+    fragmentos_medicos,
+    show_progress_bar=True,
+    normalize_embeddings=True
+).astype("float32")
+print(f"Embeddings gerados em {time.time() - t0:.2f}s | dimensao: {vetores_base.shape[1]}\n")
+
+dimensao = vetores_base.shape[1]
+M = 32
+ef_construction = 200
+
+indice_hnsw = faiss.IndexHNSWFlat(dimensao, M, faiss.METRIC_INNER_PRODUCT)
+indice_hnsw.hnsw.efConstruction = ef_construction
+indice_hnsw.hnsw.efSearch = 64
+indice_hnsw.add(vetores_base)
+
+print(f"Indice HNSW pronto | docs: {indice_hnsw.ntotal} | M: {M} | ef_construction: {ef_construction}\n")
