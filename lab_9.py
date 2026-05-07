@@ -63,3 +63,43 @@ indice_hnsw.hnsw.efSearch = 64
 indice_hnsw.add(vetores_base)
 
 print(f"Indice HNSW pronto | docs: {indice_hnsw.ntotal} | M: {M} | ef_construction: {ef_construction}\n")
+
+def gerar_documento_hipotetico(pergunta, verbose=True):
+    instrucao = (
+        "Você é um especialista em medicina clínica. "
+        "Ao receber sintomas em linguagem coloquial, escreva um parágrafo curto "
+        "no estilo de um manual médico usando terminologia clínica adequada. "
+        "Não dê diagnóstico definitivo, apenas documente o caso tecnicamente. "
+        "Responda apenas com o parágrafo."
+    )
+
+    resposta = cliente_llm.chat.completions.create(
+        model="openrouter/free",
+        messages=[
+            {"role": "system", "content": instrucao},
+            {"role": "user", "content": pergunta},
+        ],
+        temperature=0.3,
+        max_tokens=180,
+    )
+    mensagem = resposta.choices[0].message
+    conteudo = mensagem.content or ""
+    if not conteudo:
+        conteudo = getattr(mensagem, "reasoning", "") or ""
+    doc_hipotetico = conteudo.strip()
+
+    if verbose:
+        print("Documento hipotetico (HyDE):")
+        print("-" * 60)
+        print(doc_hipotetico)
+        print("-" * 60 + "\n")
+
+    return doc_hipotetico
+
+
+def vetorizar_hyde(pergunta, verbose=True):
+    doc_hip = gerar_documento_hipotetico(pergunta, verbose=verbose)
+    vetor = modelo_embedding.encode(
+        [doc_hip], normalize_embeddings=True
+    ).astype("float32")
+    return vetor, doc_hip
