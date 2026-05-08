@@ -11,20 +11,16 @@ Este laboratório implementa um pipeline de Retrieval-Augmented Generation (RAG)
 1. Instale as dependências abrindo o terminal do VSCode (`Ctrl + '`) e rodando:
 
 ```bash
-pip install faiss-cpu sentence-transformers openai numpy
+pip install faiss-cpu sentence-transformers openai numpy python-dotenv
 ```
 
-2. Configure a variável de ambiente com sua chave do OpenRouter. No terminal do VSCode:
+2. Crie um arquivo `.env` na mesma pasta do `lab_9.py` com o seguinte conteúdo:
 
-**Windows:**
-```bash
-set OPENROUTER_API_KEY=sua-chave-aqui
+```
+OPENROUTER_API_KEY=sua-chave-aqui
 ```
 
-**Mac/Linux:**
-```bash
-export OPENROUTER_API_KEY="sua-chave-aqui"
-```
+Gere sua chave gratuitamente em [https://openrouter.ai/keys](https://openrouter.ai/keys).
 
 3. Execute o script no terminal do VSCode:
 
@@ -34,43 +30,25 @@ python lab_9.py
 
 ---
 
-## Erro: Missing credentials / chave expirada
+## Por que OpenRouter em vez da API da OpenAI?
 
-```
-openai.OpenAIError: Missing credentials. Please pass an `api_key` or set the `OPENAI_API_KEY` environment variable.
-```
-
-**Causa:** esse erro ocorre quando a variável de ambiente `OPENROUTER_API_KEY` não está configurada na sessão atual do terminal, ou quando o token do OpenRouter expirou ou foi revogado. Tokens gratuitos do OpenRouter têm validade limitada e precisam ser renovados periodicamente.
-
-**Solução:** gere um novo token em [https://openrouter.ai/keys](https://openrouter.ai/keys), clicando em **Create Key**. Depois configure novamente no terminal antes de rodar o script:
-
-**Windows:**
-```bash
-set OPENROUTER_API_KEY=seu-novo-token-aqui
-python lab_9.py
-```
-
-**Mac/Linux:**
-```bash
-export OPENROUTER_API_KEY="seu-novo-token-aqui"
-python lab_9.py
-```
+A API oficial da OpenAI é paga e exige cadastro de cartão de crédito. O OpenRouter oferece acesso gratuito a vários modelos de linguagem sem custo. O cliente utilizado é o mesmo SDK da OpenAI, apenas com a `base_url` apontando para o servidor do OpenRouter. O modelo configurado é `openrouter/free`, que seleciona automaticamente um modelo gratuito disponível no momento da requisição.
 
 ### Como trocar para a API do GPT
 
-Se preferir usar a API oficial da OpenAI, substitua o bloco de configuração no topo do arquivo `lab_9.py`:
+Substitua o bloco de configuração no topo do arquivo `lab_9.py`:
 
 **De:**
 
 ```python
-MINHA_CHAVE = os.environ.get("OPENROUTER_API_KEY", "")
+MINHA_CHAVE = os.getenv("OPENROUTER_API_KEY")
 cliente_llm = OpenAI(api_key=MINHA_CHAVE, base_url="https://openrouter.ai/api/v1")
 ```
 
 **Para:**
 
 ```python
-MINHA_CHAVE = os.environ.get("OPENAI_API_KEY", "")
+MINHA_CHAVE = os.getenv("OPENAI_API_KEY")
 cliente_llm = OpenAI(api_key=MINHA_CHAVE)
 ```
 
@@ -80,25 +58,11 @@ E na função `gerar_documento_hipotetico`, trocar o model para:
 model="gpt-3.5-turbo"
 ```
 
-Depois configure a chave no terminal:
+No arquivo `.env`, troque para:
 
-**Windows:**
-```bash
-set OPENAI_API_KEY=sua-chave-openai
-python lab_9.py
 ```
-
-**Mac/Linux:**
-```bash
-export OPENAI_API_KEY="sua-chave-openai"
-python lab_9.py
+OPENAI_API_KEY=sua-chave-openai
 ```
-
----
-
-## Por que OpenRouter em vez da API da OpenAI?
-
-A API oficial da OpenAI é paga e exige cadastro de cartão de crédito. O OpenRouter oferece acesso gratuito a vários modelos de linguagem sem custo. O cliente utilizado é o mesmo SDK da OpenAI, apenas com a `base_url` apontando para o servidor do OpenRouter. O modelo configurado é `openrouter/free`, que seleciona automaticamente um modelo gratuito disponível no momento da requisição.
 
 ---
 
@@ -260,9 +224,20 @@ TypeError: vetorizar_hyde() got an unexpected keyword argument 'verbose'
 openai.OpenAIError: Missing credentials. Please pass an `api_key` or set the `OPENAI_API_KEY` environment variable.
 ```
 
-**Causa:** a variável de ambiente `OPENROUTER_API_KEY` não estava configurada na sessão do terminal do VSCode, ou o token do OpenRouter havia expirado.
+**Causa:** ao rodar no VSCode, a variável de ambiente configurada via `$env:` no PowerShell não é lida automaticamente pelo Python. O `os.environ.get` retornava string vazia porque a variável não estava disponível no contexto do processo Python.
 
-**Solução:** gerar um novo token em [https://openrouter.ai/keys](https://openrouter.ai/keys) e configurar no terminal antes de rodar o script.
+**Solução:** usar o arquivo `.env` na raiz do projeto com a biblioteca `python-dotenv`, que carrega as variáveis automaticamente ao iniciar o script. No topo do `lab_9.py` foram adicionadas as linhas:
+
+```python
+from dotenv import load_dotenv
+load_dotenv()
+```
+
+E a chave passou a ser lida com:
+
+```python
+MINHA_CHAVE = os.getenv("OPENROUTER_API_KEY")
+```
 
 ---
 
@@ -276,4 +251,4 @@ Os scores são valores brutos, não normalizados. É normal que apareçam negati
 
 Partes deste laboratório foram geradas/complementadas com IA, revisadas e validadas por **Gabriel Linard**.
 
-O uso de ferramentas de IA generativa se restringiu a brainstorming da estrutura do pipeline, geração dos 25 fragmentos de manuais médicos fictícios e templates iniciais de código, todos revisados e validados criticamente pelo autor antes da entrega.
+O uso de ferramentas de IA generativa se restringiu a brainstorming da estrutura do pipeline, geração dos 25 fragmentos de manuais médicos fictícios e templates iniciais de código, todos revisados e validados criticamente pelo autor antes da entrega. Além de me ajudar na realização desse documento.

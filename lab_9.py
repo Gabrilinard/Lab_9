@@ -5,6 +5,8 @@ from openai import OpenAI
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.cross_encoder import CrossEncoder
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 MINHA_CHAVE = os.getenv("OPENROUTER_API_KEY")
 
