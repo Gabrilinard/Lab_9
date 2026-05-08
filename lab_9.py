@@ -11,7 +11,7 @@ MINHA_CHAVE = os.getenv("OPENROUTER_API_KEY")
 cliente_llm = OpenAI(
     api_key=MINHA_CHAVE,
     base_url="https://openrouter.ai/api/v1",
-)
+) 
 
 fragmentos_medicos = [
     "Cefaleia pulsátil associada a fotofobia e fonofobia é critério diagnóstico para migrânea sem aura, conforme a Classificação Internacional das Cefaleias (ICHD-3).",
@@ -103,3 +103,25 @@ def vetorizar_hyde(pergunta, verbose=True):
         [doc_hip], normalize_embeddings=True
     ).astype("float32")
     return vetor, doc_hip
+
+def buscar_no_hnsw(vetor_consulta, top_k=10):
+    scores, indices = indice_hnsw.search(vetor_consulta, top_k)
+
+    resultados = []
+    for pos, (idx, score) in enumerate(zip(indices[0], scores[0])):
+        if idx != -1:
+            resultados.append({
+                "posicao": pos + 1,
+                "score_cosseno": float(score),
+                "texto": fragmentos_medicos[idx],
+            })
+    return resultados
+
+def imprimir_candidatos(candidatos):
+    print("=" * 65)
+    print(f"  Top-{len(candidatos)} recuperados via HNSW")
+    print("=" * 65)
+    for doc in candidatos:
+        print(f"\n#{doc['posicao']:02d} | cosseno: {doc['score_cosseno']:.4f}")
+        print(f"    {doc['texto'][:110]}...")
+    print()
