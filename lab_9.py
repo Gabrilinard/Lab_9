@@ -153,3 +153,61 @@ def imprimir_top3(top3, query):
         print(f"cosseno hnsw  : {doc['score_cosseno']:.4f}")
         print(f"texto         : {doc['texto']}")
     print("\nEsses 3 fragmentos seriam injetados no contexto do LLM gerador.\n")
+
+
+def pipeline_rag_medico(pergunta, k_busca=10, k_final=3):
+    print("\n" + "=" * 65)
+    print(f"  Query: '{pergunta}'")
+    print("=" * 65 + "\n")
+
+    print("[1/3] Gerando documento hipotetico (HyDE)...")
+    vetor_consulta, doc_hip = vetorizar_hyde(pergunta)
+
+    print(f"[2/3] Buscando top-{k_busca} no indice HNSW...")
+    candidatos = buscar_no_hnsw(vetor_consulta, top_k=k_busca)
+    imprimir_candidatos(candidatos)
+
+    print(f"[3/3] Rerankeando com Cross-Encoder, selecionando top-{k_final}...")
+    top_final = reranquear(pergunta, candidatos, top_final=k_final)
+    imprimir_top3(top_final, pergunta)
+
+    return {
+        "query_original": pergunta,
+        "documento_hipotetico": doc_hip,
+        "candidatos_hnsw": candidatos,
+        "top_final": top_final,
+    }
+
+
+resultado1 = pipeline_rag_medico(
+    "dor de cabeça latejante com a luz incomodando muito e enjoo"
+)
+
+resultado2 = pipeline_rag_medico(
+    "meu coracao fica disparado e irregular, fico com falta de ar"
+)
+
+resultado3 = pipeline_rag_medico(
+    "dor no estomago que queima bastante depois de comer"
+)
+
+print("\n" + "=" * 65)
+print("  Comparativo: busca direta vs HyDE")
+print("=" * 65)
+
+query_exp = "dor de cabeça latejante com a luz incomodando muito e enjoo"
+
+vetor_direto = modelo_embedding.encode(
+    [query_exp], normalize_embeddings=True
+).astype("float32")
+sem_hyde = buscar_no_hnsw(vetor_direto, top_k=3)
+
+print("\nSem HyDE:")
+for d in sem_hyde:
+    print(f"  [{d['score_cosseno']:.4f}] {d['texto'][:90]}...")
+
+print("\nCom HyDE:")
+vetor_h, _ = vetorizar_hyde(query_exp, verbose=False)
+com_hyde = buscar_no_hnsw(vetor_h, top_k=3)
+for d in com_hyde:
+    print(f"  [{d['score_cosseno']:.4f}] {d['texto'][:90]}...")
