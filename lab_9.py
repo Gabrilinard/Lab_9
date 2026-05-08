@@ -125,3 +125,31 @@ def imprimir_candidatos(candidatos):
         print(f"\n#{doc['posicao']:02d} | cosseno: {doc['score_cosseno']:.4f}")
         print(f"    {doc['texto'][:110]}...")
     print()
+
+print("Carregando Cross-Encoder...")
+cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+print("Cross-Encoder pronto\n")
+
+
+def reranquear(query_original, candidatos, top_final=3):
+    pares = [[query_original, doc["texto"]] for doc in candidatos]
+    scores_profundos = cross_encoder.predict(pares)
+
+    for doc, score in zip(candidatos, scores_profundos):
+        doc["score_cross_encoder"] = float(score)
+
+    reordenados = sorted(candidatos, key=lambda x: x["score_cross_encoder"], reverse=True)
+    return reordenados[:top_final]
+
+
+def imprimir_top3(top3, query):
+    print("=" * 65)
+    print(f"Top-3 final apos Cross-Encoder")
+    print(f"Query: '{query}'")
+    print("=" * 65)
+    for i, doc in enumerate(top3, 1):
+        print(f"\nPosicao {i}")
+        print(f"cross-encoder : {doc['score_cross_encoder']:.4f}")
+        print(f"cosseno hnsw  : {doc['score_cosseno']:.4f}")
+        print(f"texto         : {doc['texto']}")
+    print("\nEsses 3 fragmentos seriam injetados no contexto do LLM gerador.\n")
