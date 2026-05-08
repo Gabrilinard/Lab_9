@@ -6,35 +6,59 @@ Este laboratório implementa um pipeline de Retrieval-Augmented Generation (RAG)
 
 ---
 
-## Como Rodar
+## Como Rodar no VSCode
 
-1. Instale as dependências:
+1. Instale as dependências abrindo o terminal do VSCode (`Ctrl + '`) e rodando:
 
 ```bash
 pip install faiss-cpu sentence-transformers openai numpy
 ```
 
-2. Configure a chave do OpenRouter:
+2. Configure a variável de ambiente com sua chave do OpenRouter. No terminal do VSCode:
 
+**Windows:**
+```bash
+set OPENROUTER_API_KEY=sua-chave-aqui
+```
+
+**Mac/Linux:**
 ```bash
 export OPENROUTER_API_KEY="sua-chave-aqui"
 ```
 
-3. Execute o script:
+3. Execute o script no terminal do VSCode:
 
 ```bash
-python lab9.py
+python lab_9.py
 ```
 
 ---
 
-## Por que OpenRouter em vez da API da OpenAI?
+## Erro: Missing credentials / chave expirada
 
-A API oficial da OpenAI é paga e exige cadastro de cartão de crédito. O OpenRouter oferece acesso gratuito a vários modelos de linguagem sem custo. O cliente utilizado é o mesmo SDK da OpenAI, apenas com a `base_url` apontando para o servidor do OpenRouter. O modelo configurado é `openrouter/free`, que seleciona automaticamente um modelo gratuito disponível no momento da requisição.
+```
+openai.OpenAIError: Missing credentials. Please pass an `api_key` or set the `OPENAI_API_KEY` environment variable.
+```
+
+**Causa:** esse erro ocorre quando a variável de ambiente `OPENROUTER_API_KEY` não está configurada na sessão atual do terminal, ou quando o token do OpenRouter expirou ou foi revogado. Tokens gratuitos do OpenRouter têm validade limitada e precisam ser renovados periodicamente.
+
+**Solução:** gere um novo token em [https://openrouter.ai/keys](https://openrouter.ai/keys), clicando em **Create Key**. Depois configure novamente no terminal antes de rodar o script:
+
+**Windows:**
+```bash
+set OPENROUTER_API_KEY=seu-novo-token-aqui
+python lab_9.py
+```
+
+**Mac/Linux:**
+```bash
+export OPENROUTER_API_KEY="seu-novo-token-aqui"
+python lab_9.py
+```
 
 ### Como trocar para a API do GPT
 
-Substitua o bloco de configuração no topo do arquivo:
+Se preferir usar a API oficial da OpenAI, substitua o bloco de configuração no topo do arquivo `lab_9.py`:
 
 **De:**
 
@@ -55,6 +79,26 @@ E na função `gerar_documento_hipotetico`, trocar o model para:
 ```python
 model="gpt-3.5-turbo"
 ```
+
+Depois configure a chave no terminal:
+
+**Windows:**
+```bash
+set OPENAI_API_KEY=sua-chave-openai
+python lab_9.py
+```
+
+**Mac/Linux:**
+```bash
+export OPENAI_API_KEY="sua-chave-openai"
+python lab_9.py
+```
+
+---
+
+## Por que OpenRouter em vez da API da OpenAI?
+
+A API oficial da OpenAI é paga e exige cadastro de cartão de crédito. O OpenRouter oferece acesso gratuito a vários modelos de linguagem sem custo. O cliente utilizado é o mesmo SDK da OpenAI, apenas com a `base_url` apontando para o servidor do OpenRouter. O modelo configurado é `openrouter/free`, que seleciona automaticamente um modelo gratuito disponível no momento da requisição.
 
 ---
 
@@ -207,6 +251,18 @@ TypeError: vetorizar_hyde() got an unexpected keyword argument 'verbose'
 **Causa:** a função `vetorizar_hyde` não tinha o parâmetro `verbose` na assinatura.
 
 **Solução:** adicionar `verbose=True` na assinatura e repassar para `gerar_documento_hipotetico`.
+
+---
+
+### Erro 5 — Missing credentials ao rodar no VSCode
+
+```
+openai.OpenAIError: Missing credentials. Please pass an `api_key` or set the `OPENAI_API_KEY` environment variable.
+```
+
+**Causa:** a variável de ambiente `OPENROUTER_API_KEY` não estava configurada na sessão do terminal do VSCode, ou o token do OpenRouter havia expirado.
+
+**Solução:** gerar um novo token em [https://openrouter.ai/keys](https://openrouter.ai/keys) e configurar no terminal antes de rodar o script.
 
 ---
 
